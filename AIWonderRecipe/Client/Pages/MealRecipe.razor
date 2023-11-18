@@ -4,6 +4,7 @@
 @using System.Web
 @inject HttpClient Http
 @inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject IJSRuntime Js
 
 @if (loaded == true)
@@ -18,9 +19,17 @@
                 <h1 class="fw-bold">@recipe?.Title</h1>
                 <p>@recipe?.Summary</p>
                 <div class="text-end">
-                    <button class="btn btn-success d-print-none" @onclick="Print">Print</button>
+                    <button class="btn btn-primary d-print-none" @onclick="Print">Print</button>
+                   
+                </div> 
+                <div class="text-end">
+                    <button class="btn btn-success" @onclick="SaveRecipe">Save Recipe</button>
                    
                 </div>
+                   @* <div class="text-end">
+                    <button class="btn btn-danger" @onclick="SaveRecipe">Clear Recipe</button>
+                   
+                </div> *@
             </div>
         </div>
         <div class="row row-cols-md-2">
@@ -109,4 +118,40 @@ else
     {
         await Js.InvokeVoidAsync("printInvoke");
     }
+
+    private async Task SaveRecipe()
+    {
+        try
+        {
+            var savedRecipesJson = await localStorage.GetItemAsStringAsync("SavedRecipes");
+            List<RecipeWithImage> savedRecipes = string.IsNullOrEmpty(savedRecipesJson)
+             ? new List<RecipeWithImage>()
+             : JsonSerializer.Deserialize<List<RecipeWithImage>>(savedRecipesJson) ?? new List<RecipeWithImage>();
+
+            // Step 2: Create a RecipeWithImage object and add to list
+            var recipeWithImage = new RecipeWithImage
+                {
+                    Recipe = recipe,
+                    ImageUrl = recipeImageUrl, // Assuming this holds the URL of the first image in the Data array
+                    MealTime = rState?.MealTime // Storing the MealTime from RecipeParms
+                };
+            savedRecipes.Add(recipeWithImage);
+
+            // Step 3: Serialize and save back to local storage
+            var updatedRecipesJson = JsonSerializer.Serialize(savedRecipes);
+            await localStorage.SetItemAsync("SavedRecipes", updatedRecipesJson);
+             navigationManager.NavigateTo("/savedrecipes");
+        }
+        catch
+        {
+            Console.WriteLine("Error: Could not save recipe");
+        }
+    }
+    public class RecipeWithImage
+    {
+        public Recipe? Recipe { get; set; }
+        public string? ImageUrl { get; set; } // URL from ImageData
+        public string? MealTime { get; set; } // store MealTime category
+    }
+
 }
