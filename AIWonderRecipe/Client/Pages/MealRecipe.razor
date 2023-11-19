@@ -131,6 +131,7 @@ else
             // Step 2: Create a RecipeWithImage object and add to list
             var recipeWithImage = new RecipeWithImage
                 {
+                    Id = Guid.NewGuid(),
                     Recipe = recipe,
                     ImageUrl = recipeImageUrl, // Assuming this holds the URL of the first image in the Data array
                     MealTime = rState?.MealTime // Storing the MealTime from RecipeParms
@@ -147,11 +148,5 @@ else
             Console.WriteLine("Error: Could not save recipe");
         }
     }
-    public class RecipeWithImage
-    {
-        public Recipe? Recipe { get; set; }
-        public string? ImageUrl { get; set; } // URL from ImageData
-        public string? MealTime { get; set; } // store MealTime category
-    }
-
+    
 }
