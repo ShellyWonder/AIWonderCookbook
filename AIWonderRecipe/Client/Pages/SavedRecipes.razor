@@ -1,7 +1,48 @@
 ﻿@page "/savedrecipes"
 
+@using AIWonderRecipe.Shared
+@using System.Text.Json
+@inject NavigationManager navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+
 <h3>My Cookbook</h3>
 
-@code {
+@if (savedRecipes != null && savedRecipes.Any())
+{
+    <div class="container mt-3">
+        @foreach (var recipeWithImage in savedRecipes)
+        {
+            <div class="card mb-3" style="cursor:pointer; display: flex; align-items: center;" @onclick="() => NavigateToRecipeDetails(recipeWithImage.Id)">
+                <img class="card-img-top" src="@recipeWithImage.ImageUrl" alt="Recipe Image" style="width: 150px; height: 100px; object-fit: cover;">
 
+                <div class="card-body" style="flex-grow: 1;">
+                    <h5 class="card-title">@recipeWithImage.Recipe?.Title</h5>
+                    <p class="card-text">@recipeWithImage.Recipe?.Summary</p>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>No saved recipes found.</p>
+}
+
+@code {
+    private List<RecipeWithImage>? savedRecipes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var savedRecipesJson = await localStorage.GetItemAsStringAsync("SavedRecipes");
+        if (!string.IsNullOrEmpty(savedRecipesJson))
+        {
+            savedRecipes = JsonSerializer.Deserialize<List<RecipeWithImage>>(savedRecipesJson);
+        }
+    }
+
+    private void NavigateToRecipeDetails(Guid recipeId)
+    {
+        navigationManager.NavigateTo($"/recipedetails/{recipeId}");
+    }
 }
